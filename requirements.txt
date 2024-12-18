@@ -39,4 +39,5 @@ transformers==4.45.2
 rouge
 rouge-metric
 tqdm==4.66.5
+matplotlib
 faiss-cpu==1.9.0
