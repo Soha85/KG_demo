@@ -35,8 +35,6 @@ def extract_entities_and_relations(doc):
 
 document = st.text_area("Input Data:")
 if st.button('Apply Knowledge Graph'):
-
-
     # Process the document
     doc = nlp(document)
     entities, relations = extract_entities_and_relations(doc)
@@ -55,25 +53,6 @@ if st.button('Apply Knowledge Graph'):
 
     # Streamlit App
     st.title("Knowledge Graph Visualization")
-
-    # Add a text box for custom input (optional)
-    input_text = st.text_area("Edit the document and click 'Generate'", document)
-
-    # If user modifies the document, reprocess it
-    if st.button("Generate"):
-        doc = nlp(input_text)
-        entities, relations = extract_entities_and_relations(doc)
-
-        # Rebuild the graph
-        G.clear()
-        for entity, label in entities:
-            G.add_node(entity, label=label)
-        for head, relation, tail in relations:
-            if head in G.nodes and tail in G.nodes:
-                G.add_edge(head, tail, relation=relation)
-
-    # Step 3: Visualize the Graph
-    st.write("### Generated Knowledge Graph")
 
     plt.figure(figsize=(10, 8))
     pos = nx.spring_layout(G)
