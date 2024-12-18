@@ -11,7 +11,7 @@ st.set_page_config(layout="wide")
 nlp = spacy.load("en_core_web_sm")
 
 # Streamlit UI
-st.title("Sample RAG Demo")
+st.title("Sample Knowledge Graph:")
 
 
 # Step 1: Extract Entities and Relations
