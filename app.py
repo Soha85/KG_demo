@@ -54,7 +54,7 @@ if st.button('Apply Knowledge Graph'):
     # Streamlit App
     st.title("Knowledge Graph Visualization")
 
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(5, 5))
     pos = nx.spring_layout(G)
 
     # Draw nodes
@@ -64,7 +64,7 @@ if st.button('Apply Knowledge Graph'):
     nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, edge_color="gray")
 
     # Add labels
-    nx.draw_networkx_labels(G, pos, font_size=10, font_weight="bold")
+    nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold")
     edge_labels = {(u, v): d["relation"] for u, v, d in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red")
 
