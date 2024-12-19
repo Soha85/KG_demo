@@ -38,6 +38,8 @@ if st.button('Apply Knowledge Graph'):
     # Process the document
     doc = nlp(document)
     entities, relations = extract_entities_and_relations(doc)
+    st.write("Entities:",entities)
+    st.write("Relations:",relations)
 
     # Step 2: Build Knowledge Graph
     G = nx.DiGraph()
