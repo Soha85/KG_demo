@@ -26,7 +26,7 @@ def extract_entities_and_relations(doc):
 
         # Dummy relation extraction using dependency parsing
         for token in sent:
-            if token.dep_ in ("ROOT", "attr", "agent", "dobj"):
+            if token.dep_ in ("ROOT", "attr", "agent", "dobj","nsubj"):
                 head = token.head.text
                 tail = token.text
                 relations.append((head, token.dep_, tail))
