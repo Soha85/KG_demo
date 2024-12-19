@@ -21,7 +21,6 @@ def extract_entities_and_relations(doc):
     
     for sent in doc.sents:
         # Extract named entities
-        st.write(sent)
         sent_entities = [(ent.text, ent.label_) for ent in sent.ents]
         entities.extend(sent_entities)
 
@@ -62,17 +61,15 @@ if st.button('Apply Knowledge Graph'):
 
     # Draw nodes
     nx.draw_networkx_nodes(G, pos, node_size=200, node_color="skyblue", alpha=0.5)
-
     # Draw edges
-    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15, edge_color="gray")
-
+    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15, edge_color="black")
     # Add labels
     nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold")
     edge_labels = {(u, v): d["relation"] for u, v, d in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red")
 
     #plt.title("Knowledge Graph from Document", fontsize=10)
-    plt.axis("off")
+    #plt.axis("off")
 
     # Render the graph in Streamlit
     st.pyplot(plt)
