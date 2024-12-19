@@ -58,10 +58,10 @@ if st.button('Apply Knowledge Graph'):
     pos = nx.spring_layout(G)
 
     # Draw nodes
-    nx.draw_networkx_nodes(G, pos, node_size=2000, node_color="skyblue", alpha=0.9)
+    nx.draw_networkx_nodes(G, pos, node_size=200, node_color="skyblue", alpha=0.2)
 
     # Draw edges
-    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, edge_color="gray")
+    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=10, edge_color="gray")
 
     # Add labels
     nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold")
