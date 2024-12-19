@@ -18,9 +18,10 @@ st.title("Sample Knowledge Graph:")
 def extract_entities_and_relations(doc):
     entities = []
     relations = []
-
+    
     for sent in doc.sents:
         # Extract named entities
+        st.write(sent)
         sent_entities = [(ent.text, ent.label_) for ent in sent.ents]
         entities.extend(sent_entities)
 
@@ -70,7 +71,7 @@ if st.button('Apply Knowledge Graph'):
     edge_labels = {(u, v): d["relation"] for u, v, d in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red")
 
-    plt.title("Knowledge Graph from Document", fontsize=14)
+    plt.title("Knowledge Graph from Document", fontsize=10)
     plt.axis("off")
 
     # Render the graph in Streamlit
