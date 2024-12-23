@@ -94,7 +94,7 @@ if st.button('Generate Knowledge Graph'):
 
     edge_labels = {(u, v): d["relation"] for u, v, d in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red")
-
+    st.write(G)
     #plt.title("Knowledge Graph from Document", fontsize=12)
     plt.axis("off")
 
