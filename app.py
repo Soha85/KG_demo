@@ -28,11 +28,11 @@ def extract_entities_and_relations(doc):
 
     # Extract relations using dependency parsing
     for token in doc:
-        #if token.dep_ in ("nsubj", "dobj"):  # Identify meaningful relations
-        head = token.head.text
-        tail = token.text
-        relation = token.dep_
-        relations.append((head, relation, tail))
+        if token.dep_ in ("nsubj", "dobj","ROOT","nsubjpass","attr","pobj"):  # Identify meaningful relations
+            head = token.head.text
+            tail = token.text
+            relation = token.dep_
+            relations.append((head, relation, tail))
     
     return entities, relations
 
