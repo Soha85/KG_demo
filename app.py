@@ -28,8 +28,7 @@ def extract_entities_and_relations(doc):
 
     # Extract relations using dependency parsing
     for token in doc:
-        # Look for meaningful relations
-        if token.dep_ in ("nsubj", "dobj"):# and token.head.ent_type_:
+        if token.dep_ in ("nsubj", "dobj"):  # Identify meaningful relations
             head = token.head.text
             tail = token.text
             relation = token.dep_
@@ -64,38 +63,36 @@ if st.button('Generate Knowledge Graph'):
 
     # Add relations as edges
     for head, relation, tail in set(relations):  # Avoid duplicate relations
-        if head in G.nodes and tail in G.nodes:
-            G.add_edge(head, tail, relation=relation)
-
-    # Add missing nodes dynamically
-    for head, _, tail in relations:
         if head not in G.nodes:
             G.add_node(head)
         if tail not in G.nodes:
             G.add_node(tail)
+        G.add_edge(head, tail, relation=relation)
 
     # Step 3: Visualize the Knowledge Graph
     st.write("### Knowledge Graph Visualization")
     
-    plt.figure(figsize=(8, 8))
-    pos = nx.spring_layout(G)
+    plt.figure(figsize=(10, 10))
+    pos = nx.spring_layout(G, seed=42)  # Stable layout for consistent visualization
 
     # Draw nodes with color based on entity type
     node_colors = [
         "lightblue" if G.nodes[node].get("type") == "PERSON" else "orange"
         for node in G.nodes
     ]
-    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=500, alpha=0.8)
-    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15, edge_color="black")
+    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=800, alpha=0.9)
+    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15, edge_color="black", alpha=0.7)
 
-    # Add labels to nodes and edges
+    # Add labels to nodes
     node_labels = {node: f"{node}\n({G.nodes[node].get('type', 'N/A')})" for node in G.nodes}
-    nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=9, font_weight="bold")
+    nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=10, font_weight="bold")
 
-    edge_labels = {(u, v): d["relation"] for u, v, d in G.edges(data=True)}
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red")
-    st.write(G)
-    #plt.title("Knowledge Graph from Document", fontsize=12)
+    # Add edge labels for relations
+    edge_labels = nx.get_edge_attributes(G, "relation")
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red", font_size=9)
+
+    # Remove axes for better visualization
+    plt.title("Knowledge Graph from Document", fontsize=14)
     plt.axis("off")
 
     # Render the graph in Streamlit
