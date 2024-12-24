@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 st.set_page_config(layout="wide")
 
 # Load SpaCy model
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_md")
 
 # Streamlit UI
 st.title("Interactive Knowledge Graph")
