@@ -131,14 +131,13 @@ class KnowledgeGraphBuilder:
 
 def main():
     st.title("Knowledge Graph Builder")
+
     
-    st.write("""
+    text = st.text_area("Enter your text here:", height=200,
+                       placeholder="""
     This application builds a knowledge graph from input text using Natural Language Processing.
     Enter your text below to visualize the relationships between entities.
     """)
-    
-    text = st.text_area("Enter your text here:", height=200,
-                       placeholder="Enter text to analyze... (e.g., 'Albert Einstein developed the theory of relativity.')")
     
     kg_builder = KnowledgeGraphBuilder()
     
