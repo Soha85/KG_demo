@@ -1,103 +1,173 @@
 import spacy
 import networkx as nx
-import matplotlib.pyplot as plt
 import streamlit as st
-import logging
+from typing import List, Tuple, Dict
+import en_core_web_md
+from collections import defaultdict
+import matplotlib.pyplot as plt
+import networkx as nx
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Set Streamlit page configuration
-st.set_page_config(layout="wide")
-
-# Load SpaCy model
-nlp = spacy.load("en_core_web_md")
-
-# Streamlit UI
-st.title("Interactive Knowledge Graph")
-
-# Step 1: Extract Entities and Relations
-def extract_entities_and_relations(doc):
-
+class KnowledgeGraphBuilder:
+    def __init__(self):
+        """Initialize the knowledge graph builder with spaCy medium model."""
+        self.nlp = spacy.load('en_core_web_md')
+        self.graph = nx.DiGraph()
+        
+    def preprocess_text(self, text: str) -> spacy.tokens.Doc:
+        """Preprocess the input text using spaCy."""
+        return self.nlp(text)
     
-    entities = []
-    relations = []
+    def extract_entities(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str]]:
+        """Extract entities and their types from the processed text."""
+        entities = []
+        for ent in doc.ents:
+            entities.append((ent.text, ent.label_))
+        return entities
     
-    # Extract named entities
-    for ent in doc.ents:
-        entities.append((ent.text, ent.label_))
-
-    # Extract relations using dependency parsing
-    for token in doc:
-        if token.dep_ in ("nsubj", "dobj","ROOT","nsubjpass","attr","pobj"):  # Identify meaningful relations
-            head = token.head.text
-            tail = token.text
-            relation = token.dep_
-            relations.append((head, relation, tail))
+    def extract_relationships(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str, str]]:
+        """Extract relationships between entities using dependency parsing."""
+        relationships = []
+        
+        for token in doc:
+            # Look for subject-verb-object patterns
+            if token.dep_ == "ROOT" and token.pos_ == "VERB":
+                subject = None
+                obj = None
+                
+                # Find subject
+                for child in token.children:
+                    if child.dep_ in ["nsubj", "nsubjpass"]:
+                        subject = child
+                        break
+                
+                # Find object
+                for child in token.children:
+                    if child.dep_ in ["dobj", "pobj"]:
+                        obj = child
+                        break
+                
+                if subject and obj:
+                    relationships.append((
+                        self._get_span_text(subject),
+                        token.text,
+                        self._get_span_text(obj)
+                    ))
+        
+        return relationships
     
-    return entities, relations
+    def _get_span_text(self, token: spacy.tokens.Token) -> str:
+        """Get the full text span for a token, including compound words and modifiers."""
+        words = [token.text]
+        
+        # Check for compound words
+        for child in token.children:
+            if child.dep_ == "compound":
+                words.insert(0, child.text)
+        
+        return " ".join(words)
+    
+    def build_graph(self, text: str) -> nx.DiGraph:
+        """Build a knowledge graph from the input text."""
+        # Process text
+        doc = self.preprocess_text(text)
+        
+        # Extract entities and relationships
+        entities = self.extract_entities(doc)
+        relationships = self.extract_relationships(doc)
+        
+        # Clear previous graph
+        self.graph.clear()
+        
+        # Add entities to graph
+        for entity, entity_type in entities:
+            self.graph.add_node(entity, type=entity_type)
+        
+        # Add relationships to graph
+        for subj, pred, obj in relationships:
+            self.graph.add_edge(subj, obj, relationship=pred)
+        
+        return self.graph
+    
+    def get_graph_info(self) -> Dict:
+        """Return basic information about the knowledge graph."""
+        return {
+            'num_nodes': self.graph.number_of_nodes(),
+            'num_edges': self.graph.number_of_edges(),
+            'nodes': list(self.graph.nodes(data=True)),
+            'edges': list(self.graph.edges(data=True))
+        }
+    
+    def visualize_graph(self) -> plt.Figure:
+        """Create a visualization of the knowledge graph."""
+        plt.figure(figsize=(12, 8))
+        pos = nx.spring_layout(self.graph)
+        
+        # Draw nodes
+        nx.draw_networkx_nodes(self.graph, pos, node_color='lightblue', 
+                             node_size=2000, alpha=0.7)
+        
+        # Draw edges
+        nx.draw_networkx_edges(self.graph, pos, edge_color='gray', 
+                             arrows=True, arrowsize=20)
+        
+        # Add labels
+        nx.draw_networkx_labels(self.graph, pos)
+        
+        # Add edge labels
+        edge_labels = nx.get_edge_attributes(self.graph, 'relationship')
+        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels)
+        
+        plt.title("Knowledge Graph Visualization")
+        plt.axis('off')
+        return plt.gcf()
 
-# Input Text Area
-document = st.text_area("Input Text:", 
-    """
+def main():
+    st.title("Knowledge Graph Builder")
+    
+    # Add description
+    st.write("""
+    
     Albert Einstein developed the Theory of Relativity. He was born in Germany. 
     Einstein won the Nobel Prize in Physics in 1921. The capital of France is Paris.
     """)
-
-if st.button('Generate Knowledge Graph'):
-    # Process the document
-    doc = nlp(document)
-    for tok in doc:
-      st.write(tok.text, "...", tok.dep_)
-    entities, relations = extract_entities_and_relations(doc)
-
-    # Display extracted entities and relations
-    st.write("### Extracted Entities:")
-    st.write(entities)
-    st.write("### Extracted Relations:")
-    st.write(relations)
-
-    # Step 2: Build Knowledge Graph
-    G = nx.DiGraph()
-
-    # Add entities as nodes
-    for entity, label in entities:
-        G.add_node(entity, type=label)
-
-    # Add relations as edges
-    for head, relation, tail in set(relations):  # Avoid duplicate relations
-        if head not in G.nodes:
-            G.add_node(head)
-        if tail not in G.nodes:
-            G.add_node(tail)
-        G.add_edge(head, tail, relation=relation)
-
-    # Step 3: Visualize the Knowledge Graph
-    st.write("### Knowledge Graph Visualization")
     
-    plt.figure(figsize=(10, 10))
-    pos = nx.spring_layout(G, seed=42)  # Stable layout for consistent visualization
+    # Create text input area
+    text = st.text_area("Enter your text here:", height=200,
+                       placeholder="Enter text to analyze... (e.g., 'Albert Einstein developed the theory of relativity.')")
+    
+    # Initialize knowledge graph builder
+    kg_builder = KnowledgeGraphBuilder()
+    
+    if st.button("Generate Knowledge Graph"):
+        if text.strip():
+            # Build graph
+            graph = kg_builder.build_graph(text)
+            graph_info = kg_builder.get_graph_info()
+            
+            # Display basic information
+            st.subheader("Graph Information")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Number of Nodes", graph_info['num_nodes'])
+            with col2:
+                st.metric("Number of Edges", graph_info['num_edges'])
+            
+            # Display entities
+            st.subheader("Entities Found")
+            for node, attrs in graph_info['nodes']:
+                st.write(f"- {node} ({attrs.get('type', 'Unknown type')})")
+            
+            # Display relationships
+            st.subheader("Relationships")
+            for subj, obj, attrs in graph_info['edges']:
+                st.write(f"- {subj} --[{attrs['relationship']}]--> {obj}")
+            
+            # Visualize graph
+            st.subheader("Graph Visualization")
+            fig = kg_builder.visualize_graph()
+            st.pyplot(fig)
+        else:
+            st.warning("Please enter some text to analyze.")
 
-    # Draw nodes with color based on entity type
-    node_colors = [
-        "lightblue" if G.nodes[node].get("type") == "PERSON" else "orange"
-        for node in G.nodes
-    ]
-    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=800, alpha=0.9)
-    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15, edge_color="black", alpha=0.7)
-
-    # Add labels to nodes
-    node_labels = {node: f"{node}\n({G.nodes[node].get('type', 'N/A')})" for node in G.nodes}
-    nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=10, font_weight="bold")
-
-    # Add edge labels for relations
-    edge_labels = nx.get_edge_attributes(G, "relation")
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red", font_size=9)
-
-    # Remove axes for better visualization
-    plt.title("Knowledge Graph from Document", fontsize=14)
-    plt.axis("off")
-
-    # Render the graph in Streamlit
-    st.pyplot(plt)
+if __name__ == "__main__":
+    main()
