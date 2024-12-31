@@ -6,6 +6,8 @@ import en_core_web_md
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import networkx as nx
+from spacy import displacy
+import streamlit.components.v1 as components
 
 class KnowledgeGraphBuilder:
     def __init__(self):
@@ -70,6 +72,7 @@ class KnowledgeGraphBuilder:
         """Build a knowledge graph from the input text."""
         # Process text
         doc = self.preprocess_text(text)
+        displacy.render(doc, style="dep" , jupyter=True)
         
         # Extract entities and relationships
         entities = self.extract_entities(doc)
@@ -87,7 +90,12 @@ class KnowledgeGraphBuilder:
             self.graph.add_edge(subj, obj, relationship=pred)
         
         return self.graph
-    
+        
+    def get_dependency_viz(self) -> str:
+        """Get HTML for dependency visualization."""
+        html = displacy.render(self.doc, style="dep", jupyter=False)
+        return html
+        
     def get_graph_info(self):
         """Return basic information about the knowledge graph."""
         return {
@@ -145,6 +153,11 @@ def main():
                 st.metric("Number of Nodes", graph_info['num_nodes'])
             with col2:
                 st.metric("Number of Edges", graph_info['num_edges'])
+            
+            # Display dependency visualization
+            st.subheader("Dependency Parse")
+            dep_html = kg_builder.get_dependency_viz()
+            components.html(dep_html, height=400, scrolling=True)
             
             # Display entities
             st.subheader("Entities Found")
