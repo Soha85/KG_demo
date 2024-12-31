@@ -124,13 +124,7 @@ class KnowledgeGraphBuilder:
 def main():
     st.title("Knowledge Graph Builder")
     
-    # Add description
-    st.write("""
-    
-    Albert Einstein developed the Theory of Relativity. He was born in Germany. 
-    Einstein won the Nobel Prize in Physics in 1921. The capital of France is Paris.
-    """)
-    
+  
     # Create text input area
     text = st.text_area("Enter your text here:", height=200,
                        placeholder="Enter text to analyze... (e.g., 'Albert Einstein developed the theory of relativity.')")
