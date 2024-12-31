@@ -13,18 +13,18 @@ class KnowledgeGraphBuilder:
         self.nlp = spacy.load('en_core_web_md')
         self.graph = nx.DiGraph()
         
-    def preprocess_text(self, text: str) -> spacy.tokens.Doc:
+    def preprocess_text(self, text: str):
         """Preprocess the input text using spaCy."""
         return self.nlp(text)
     
-    def extract_entities(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str]]:
+    def extract_entities(self, doc: spacy.tokens.Doc):
         """Extract entities and their types from the processed text."""
         entities = []
         for ent in doc.ents:
             entities.append((ent.text, ent.label_))
         return entities
     
-    def extract_relationships(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str, str]]:
+    def extract_relationships(self, doc: spacy.tokens.Doc):
         """Extract relationships between entities using dependency parsing."""
         relationships = []
         
@@ -55,7 +55,7 @@ class KnowledgeGraphBuilder:
         
         return relationships
     
-    def _get_span_text(self, token: spacy.tokens.Token) -> str:
+    def _get_span_text(self, token: spacy.tokens.Token):
         """Get the full text span for a token, including compound words and modifiers."""
         words = [token.text]
         
@@ -66,7 +66,7 @@ class KnowledgeGraphBuilder:
         
         return " ".join(words)
     
-    def build_graph(self, text: str) -> nx.DiGraph:
+    def build_graph(self, text: str):
         """Build a knowledge graph from the input text."""
         # Process text
         doc = self.preprocess_text(text)
@@ -88,7 +88,7 @@ class KnowledgeGraphBuilder:
         
         return self.graph
     
-    def get_graph_info(self) -> Dict:
+    def get_graph_info(self):
         """Return basic information about the knowledge graph."""
         return {
             'num_nodes': self.graph.number_of_nodes(),
@@ -97,7 +97,7 @@ class KnowledgeGraphBuilder:
             'edges': list(self.graph.edges(data=True))
         }
     
-    def visualize_graph(self) -> plt.Figure:
+    def visualize_graph(self):
         """Create a visualization of the knowledge graph."""
         plt.figure(figsize=(12, 8))
         pos = nx.spring_layout(self.graph)
