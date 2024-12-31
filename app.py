@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict
 from spacy import displacy
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
-
+st.set_page_config(layout="wide")
 class KnowledgeGraphBuilder:
     def __init__(self):
         """Initialize the knowledge graph builder with spaCy model."""
@@ -13,19 +13,19 @@ class KnowledgeGraphBuilder:
         self.graph = nx.DiGraph()
         self.doc = None  # Initialize doc as None
         
-    def preprocess_text(self, text: str) -> spacy.tokens.Doc:
+    def preprocess_text(self, text: str):
         """Preprocess the input text using spaCy."""
         self.doc = self.nlp(text)
         return self.doc
     
-    def extract_entities(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str]]:
+    def extract_entities(self, doc: spacy.tokens.Doc):
         """Extract entities and their types from the processed text."""
         entities = []
         for ent in doc.ents:
             entities.append((ent.text, ent.label_))
         return entities
     
-    def _get_span_text(self, token: spacy.tokens.Token) -> str:
+    def _get_span_text(self, token: spacy.tokens.Token):
         """Get the full text span for a token, including compound words and modifiers."""
         words = [token.text]
         
@@ -36,7 +36,7 @@ class KnowledgeGraphBuilder:
         
         return " ".join(words)
     
-    def extract_relationships(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str, str]]:
+    def extract_relationships(self, doc: spacy.tokens.Doc):
         """Extract relationships between entities using dependency parsing."""
         relationships = []
         
@@ -67,7 +67,7 @@ class KnowledgeGraphBuilder:
         
         return relationships
     
-    def build_graph(self, text: str) -> nx.DiGraph:
+    def build_graph(self, text: str):
         """Build a knowledge graph from the input text."""
         # Process text
         doc = self.preprocess_text(text)
@@ -89,7 +89,7 @@ class KnowledgeGraphBuilder:
         
         return self.graph
     
-    def get_dependency_viz(self) -> str:
+    def get_dependency_viz(self):
         """Get HTML for dependency visualization."""
         if self.doc is None:
             return ""
@@ -105,7 +105,7 @@ class KnowledgeGraphBuilder:
             'edges': list(self.graph.edges(data=True))
         }
     
-    def visualize_graph(self) -> plt.Figure:
+    def visualize_graph(self):
         """Create a visualization of the knowledge graph."""
         plt.figure(figsize=(12, 8))
         pos = nx.spring_layout(self.graph)
