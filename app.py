@@ -13,60 +13,99 @@ class KnowledgeGraphBuilder:
         self.nlp = spacy.load('en_core_web_md')
         self.graph = nx.DiGraph()
         self.doc = None  # Initialize doc as None
+        self.pronoun_map = {}  # Dictionary to store pronoun -> noun mappings
         
     def preprocess_text(self, text: str):
         """Preprocess the input text using spaCy."""
         self.doc = self.nlp(text)
+        self._build_pronoun_map()
         return self.doc
+    
+    def _build_pronoun_map(self):
+        """Build a mapping of pronouns to their referent nouns."""
+        self.pronoun_map = {}
+        current_subject = None
+        
+        for sent in self.doc.sents:
+            for token in sent:
+                # If we find a proper noun or a noun that's a subject, update our current subject
+                if token.pos_ == "PROPN" or (token.pos_ == "NOUN" and token.dep_ == "nsubj"):
+                    current_subject = token.text.lower()
+                
+                # Map pronouns to the current subject if it exists
+                elif token.pos_ == "PRON" and token.dep_ == "nsubj" and current_subject:
+                    self.pronoun_map[token.i] = current_subject
     
     def extract_entities(self, doc: spacy.tokens.Doc):
         """Extract entities and their types from the processed text."""
         entities = []
-        for ent in doc.ents:
-            entities.append((ent.text, ent.label_))
+        seen = set()
+        
+        # Get named entities and nouns
+        for token in doc:
+            if token.pos_ in ["PROPN", "NOUN"] and token.dep_ in ["nsubj", "nsubjpass", "attr"]:
+                entity_text = token.text.lower()
+                if entity_text not in seen:
+                    entities.append((entity_text, "NOUN"))
+                    seen.add(entity_text)
+        
         return entities
     
-    def _get_span_text(self, token: spacy.tokens.Token):
+    def _resolve_pronoun(self, token):
+        """Resolve a pronoun to its referent noun if possible."""
+        if token.i in self.pronoun_map:
+            return self.pronoun_map[token.i]
+        return token.text.lower()
+    
+    def extract_relationships(self, doc: spacy.tokens.Doc):
+        """Extract relationships, resolving pronouns to their referent nouns."""
+        relationships = []
+        
+        for sent in doc.sents:
+            for token in sent:
+                # Handle both regular verbs and copular verbs (is/am/are)
+                if (token.pos_ == "VERB" or token.lemma_ in ["be", "am", "is", "are"]):
+                    subject = None
+                    obj = None
+                    
+                    # Find subject
+                    for child in token.children:
+                        if child.dep_ in ["nsubj", "nsubjpass"]:
+                            subject = child
+                            break
+                    
+                    # Find object or predicate nominal
+                    for child in token.children:
+                        if child.dep_ in ["dobj", "pobj", "attr", "acomp"]:
+                            obj = child
+                            break
+                    
+                    if subject and obj:
+                        # Resolve pronouns to their referent nouns
+                        subj_text = self._resolve_pronoun(subject)
+                        obj_text = self._get_span_text(obj).lower()
+                        
+                        # For copular verbs, use "is" as relationship
+                        verb = "is" if token.lemma_ in ["be", "am", "is", "are"] else token.text
+                        
+                        relationships.append((
+                            subj_text,
+                            verb,
+                            obj_text
+                        ))
+        
+        return relationships
+    
+    def _get_span_text(self, token: spacy.tokens.Token) :
         """Get the full text span for a token, including compound words and modifiers."""
         words = [token.text]
         
-        # Check for compound words
+        # Check for compound words and adjective modifiers
         for child in token.children:
-            if child.dep_ == "compound":
+            if child.dep_ in ["compound", "amod"]:
                 words.insert(0, child.text)
         
         return " ".join(words)
-    
-    def extract_relationships(self, doc: spacy.tokens.Doc):
-        """Extract relationships between entities using dependency parsing."""
-        relationships = []
-        
-        for token in doc:
-            # Look for subject-verb-object patterns
-            if token.dep_ == "ROOT" and token.pos_ == "VERB":
-                subject = None
-                obj = None
-                
-                # Find subject
-                for child in token.children:
-                    if child.dep_ in ["nsubj", "nsubjpass"]:
-                        subject = child
-                        break
-                
-                # Find object
-                for child in token.children:
-                    if child.dep_ in ["dobj", "pobj"]:
-                        obj = child
-                        break
-                
-                if subject and obj:
-                    relationships.append((
-                        self._get_span_text(subject),
-                        token.text,
-                        self._get_span_text(obj)
-                    ))
-        
-        return relationships
     
     def build_graph(self, text: str):
         """Build a knowledge graph from the input text."""
