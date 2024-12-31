@@ -107,16 +107,17 @@ class KnowledgeGraphBuilder:
     
     def visualize_graph(self):
         """Create a visualization of the knowledge graph."""
-        plt.figure(figsize=(12, 8))
+        #plt.figure(figsize=(12, 8))
+        plt.figure()
         pos = nx.spring_layout(self.graph)
         
         # Draw nodes
         nx.draw_networkx_nodes(self.graph, pos, node_color='lightblue', 
-                             node_size=2000, alpha=0.7)
+                             node_size=200, alpha=0.5)
         
         # Draw edges
         nx.draw_networkx_edges(self.graph, pos, edge_color='gray', 
-                             arrows=True, arrowsize=20)
+                             arrows=True, arrowsize=10)
         
         # Add labels
         nx.draw_networkx_labels(self.graph, pos)
