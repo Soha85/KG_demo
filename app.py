@@ -19,6 +19,8 @@ st.title("Interactive Knowledge Graph")
 
 # Step 1: Extract Entities and Relations
 def extract_entities_and_relations(doc):
+
+    
     entities = []
     relations = []
     
@@ -46,6 +48,8 @@ document = st.text_area("Input Text:",
 if st.button('Generate Knowledge Graph'):
     # Process the document
     doc = nlp(document)
+    for tok in doc:
+      st.write(tok.text, "...", tok.dep_)
     entities, relations = extract_entities_and_relations(doc)
 
     # Display extracted entities and relations
