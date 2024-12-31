@@ -6,6 +6,7 @@ from spacy import displacy
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 st.set_page_config(layout="wide")
+
 class KnowledgeGraphBuilder:
     def __init__(self):
         """Initialize the knowledge graph builder with spaCy model."""
