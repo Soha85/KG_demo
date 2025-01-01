@@ -153,6 +153,45 @@ class KnowledgeGraphBuilder:
         return self.graph
     
     # [Rest of the methods remain the same: get_dependency_viz, get_graph_info, visualize_graph]
+    def get_dependency_viz(self) -> str:
+        """Get HTML for dependency visualization."""
+        if self.doc is None:
+            return ""
+        html = displacy.render(self.doc, style="dep", jupyter=False)
+        return html
+    
+    def get_graph_info(self) -> Dict:
+        """Return basic information about the knowledge graph."""
+        return {
+            'num_nodes': self.graph.number_of_nodes(),
+            'num_edges': self.graph.number_of_edges(),
+            'nodes': list(self.graph.nodes(data=True)),
+            'edges': list(self.graph.edges(data=True))
+        }
+    
+    def visualize_graph(self) -> plt.Figure:
+        """Create a visualization of the knowledge graph."""
+        plt.figure(figsize=(12, 8))
+        pos = nx.spring_layout(self.graph)
+        
+        # Draw nodes
+        nx.draw_networkx_nodes(self.graph, pos, node_color='lightblue', 
+                             node_size=2000, alpha=0.7)
+        
+        # Draw edges
+        nx.draw_networkx_edges(self.graph, pos, edge_color='gray', 
+                             arrows=True, arrowsize=20)
+        
+        # Add labels
+        nx.draw_networkx_labels(self.graph, pos)
+        
+        # Add edge labels
+        edge_labels = nx.get_edge_attributes(self.graph, 'relationship')
+        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels)
+        
+        plt.title("Knowledge Graph Visualization")
+        plt.axis('off')
+        return plt.gcf()
 
 def main():
     st.title("Knowledge Graph Builder")
