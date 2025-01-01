@@ -75,10 +75,11 @@ class KnowledgeGraphBuilder:
             current_sentence_context = None
             
             for token in sent:
-                # Handle both regular verbs and copular verbs (is/am/are)
-                if (token.pos_ == "VERB" or token.lemma_ in ["be", "am", "is", "are"]):
+                # Handle all verbs
+                if (token.pos_ == "VERB"):# or token.lemma_ in ["be", "am", "is", "are"]):
                     subject = None
                     obj = None
+                    verb_phrase = token.text
                     
                     # Find subject
                     for child in token.children:
@@ -90,16 +91,10 @@ class KnowledgeGraphBuilder:
                     
                     # Find object or predicate nominal
                     for child in token.children:
-                        if child.dep_ in ["dobj", "pobj", "attr", "acomp"]:
+                        if child.dep_ in ["dobj", "pobj", "attr", "acomp","poss"]:
                             obj = child
                             break
-                        # Handle possessive relationships
-                        elif child.dep_ == "poss":
-                            relationships.append((
-                                child.text.lower(),
-                                "is sister of",
-                                current_sentence_context
-                            ))
+                       
                     
                     if subject and obj:
                         # Resolve pronouns to their referent nouns
