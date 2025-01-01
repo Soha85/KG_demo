@@ -66,7 +66,7 @@ class KnowledgeGraphBuilder:
         return token.text.lower()
     
     def extract_relationships(self, doc: spacy.tokens.Doc):
-        """Extract relationships with improved context handling."""
+        """Extract relationships with improved verb pattern handling."""
         relationships = []
         current_sentence_context = None
         
@@ -76,7 +76,7 @@ class KnowledgeGraphBuilder:
             
             for token in sent:
                 # Handle all verbs
-                if (token.pos_ == "VERB"):# or token.lemma_ in ["be", "am", "is", "are"]):
+                if token.pos_ == "VERB":
                     subject = None
                     obj = None
                     verb_phrase = token.text
@@ -89,26 +89,69 @@ class KnowledgeGraphBuilder:
                                 current_sentence_context = child.text.lower()
                             break
                     
-                    # Find object or predicate nominal
+                    # Find object and handle special verb patterns
                     for child in token.children:
-                        if child.dep_ in ["dobj", "pobj", "attr", "acomp","poss"]:
+                        # Handle "work as", "serve as", etc.
+                        if child.text == "as" and child.dep_ == "prep":
+                            for as_child in child.children:
+                                if as_child.dep_ == "pobj":
+                                    obj = as_child
+                                    verb_phrase = f"{token.text} as"
+                                    break
+                        # Handle direct objects
+                        elif child.dep_ in ["dobj", "pobj"]:
                             obj = child
-                            break
-                       
+                        # Handle predicative complements
+                        elif child.dep_ == "acomp":
+                            obj = child
+                        # Handle possessive relationships
+                        elif child.dep_ == "poss" and current_sentence_context:
+                            relationships.append((
+                                child.text.lower(),
+                                "is sister of",
+                                current_sentence_context
+                            ))
                     
                     if subject and obj:
                         # Resolve pronouns to their referent nouns
                         subj_text = self._resolve_pronoun(subject)
                         obj_text = self._get_span_text(obj).lower()
                         
-                        # For copular verbs, use "is" as relationship
-                        verb = "is" if token.lemma_ in ["be", "am", "is", "are"] else token.text
-                        
-                        # Only add relationship if subject and object are different
+                        # Add relationship if subject and object are different
                         if subj_text != obj_text:
                             relationships.append((
                                 subj_text,
-                                verb,
+                                verb_phrase,
+                                obj_text
+                            ))
+                
+                # Handle copular verbs (is/am/are) separately
+                elif token.lemma_ in ["be", "am", "is", "are"]:
+                    subject = None
+                    obj = None
+                    
+                    # Find subject
+                    for child in token.children:
+                        if child.dep_ in ["nsubj", "nsubjpass"]:
+                            subject = child
+                            if child.pos_ == "PROPN":
+                                current_sentence_context = child.text.lower()
+                            break
+                    
+                    # Find object or predicate nominal
+                    for child in token.children:
+                        if child.dep_ in ["attr", "acomp"]:
+                            obj = child
+                            break
+                    
+                    if subject and obj:
+                        subj_text = self._resolve_pronoun(subject)
+                        obj_text = self._get_span_text(obj).lower()
+                        
+                        if subj_text != obj_text:
+                            relationships.append((
+                                subj_text,
+                                "is",
                                 obj_text
                             ))
         
