@@ -5,6 +5,7 @@ from typing import List, Tuple, Dict
 from spacy import displacy
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
+st.set_page_config(layout="wide")
 
 class KnowledgeGraphBuilder:
     def __init__(self):
@@ -176,7 +177,7 @@ class KnowledgeGraphBuilder:
         
         # Draw nodes
         nx.draw_networkx_nodes(self.graph, pos, node_color='lightblue', 
-                             node_size=2000, alpha=0.7)
+                             node_size=200, alpha=0.7)
         
         # Draw edges
         nx.draw_networkx_edges(self.graph, pos, edge_color='gray', 
