@@ -15,7 +15,7 @@ class KnowledgeGraphBuilder:
         self.pronoun_map = {}  # Dictionary to store pronoun -> noun mappings
         self.current_context = None  # Track current person being discussed
         
-    def preprocess_text(self, text: str) -> spacy.tokens.Doc:
+    def preprocess_text(self, text: str):
         """Preprocess the text and build pronoun mappings."""
         self.doc = self.nlp(text)
         self._build_pronoun_map()
@@ -43,7 +43,7 @@ class KnowledgeGraphBuilder:
                 if token.pos_ == "PRON" and self.current_context:
                     self.pronoun_map[token.i] = self.current_context
     
-    def extract_entities(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str]]:
+    def extract_entities(self, doc: spacy.tokens.Doc):
         """Extract entities and their types from the processed text."""
         entities = []
         seen = set()
@@ -58,13 +58,13 @@ class KnowledgeGraphBuilder:
         
         return entities
     
-    def _resolve_pronoun(self, token) -> str:
+    def _resolve_pronoun(self, token):
         """Resolve a pronoun to its referent noun if possible."""
         if token.i in self.pronoun_map:
             return self.pronoun_map[token.i]
         return token.text.lower()
     
-    def extract_relationships(self, doc: spacy.tokens.Doc) -> List[Tuple[str, str, str]]:
+    def extract_relationships(self, doc: spacy.tokens.Doc):
         """Extract relationships with improved context handling."""
         relationships = []
         current_sentence_context = None
@@ -118,7 +118,7 @@ class KnowledgeGraphBuilder:
         
         return relationships
     
-    def _get_span_text(self, token: spacy.tokens.Token) -> str:
+    def _get_span_text(self, token: spacy.tokens.Token):
         """Get the full text span for a token, including compound words and modifiers."""
         words = [token.text]
         
@@ -129,7 +129,7 @@ class KnowledgeGraphBuilder:
         
         return " ".join(words)
     
-    def build_graph(self, text: str) -> nx.DiGraph:
+    def build_graph(self, text: str):
         """Build a knowledge graph from the input text."""
         # Process text
         doc = self.preprocess_text(text)
@@ -156,14 +156,9 @@ class KnowledgeGraphBuilder:
 
 def main():
     st.title("Knowledge Graph Builder")
-    
-    st.write("""
-    This application builds a knowledge graph from input text using Natural Language Processing.
-    Enter your text below to visualize the relationships between entities.
-    """)
-    
+
     text = st.text_area("Enter your text here:", height=200,
-                       placeholder="Enter text to analyze... (e.g., 'I am Soha. I am a student. She is Heba. She is Soha's sister.')")
+                       placeholder="")
     
     kg_builder = KnowledgeGraphBuilder()
     
