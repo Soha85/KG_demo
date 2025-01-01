@@ -134,7 +134,7 @@ class KnowledgeGraphBuilder:
         html = displacy.render(self.doc, style="dep", jupyter=False)
         return html
     
-    def get_graph_info(self) -> Dict:
+    def get_graph_info(self):
         """Return basic information about the knowledge graph."""
         return {
             'num_nodes': self.graph.number_of_nodes(),
@@ -143,7 +143,7 @@ class KnowledgeGraphBuilder:
             'edges': list(self.graph.edges(data=True))
         }
     
-    def visualize_graph(self) -> plt.Figure:
+    def visualize_graph(self):
         """Create a visualization of the knowledge graph."""
         plt.figure(figsize=(12, 8))
         pos = nx.spring_layout(self.graph)
