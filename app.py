@@ -48,15 +48,15 @@ class KnowledgeGraphBuilder:
         """Extract entities and their types from the processed text."""
         entities = []
         seen = set()
-        
-        # Get named entities and nouns
+    
         for token in doc:
             if token.pos_ in ["PROPN", "NOUN"] and token.dep_ in ["nsubj", "nsubjpass", "attr", "poss"]:
-                entity_text = token.text.lower()
+                entity_text = self._resolve_pronoun(token)
+                entity_text = entity_text.lower()  # Normalize to lowercase
                 if entity_text not in seen:
                     entities.append((entity_text, "NOUN"))
                     seen.add(entity_text)
-        
+    
         return entities
     
     def _resolve_pronoun(self, token):
@@ -68,93 +68,29 @@ class KnowledgeGraphBuilder:
     def extract_relationships(self, doc: spacy.tokens.Doc):
         """Extract relationships with improved verb pattern handling."""
         relationships = []
-        current_sentence_context = None
-        
+    
         for sent in doc.sents:
-            # Reset context for new sentence
-            current_sentence_context = None
-            
             for token in sent:
-                # Handle all verbs
                 if token.pos_ == "VERB":
                     subject = None
                     obj = None
                     verb_phrase = token.text
-                    
-                    # Find subject
-                    for child in token.children:
-                        if child.dep_ in ["nsubj", "nsubjpass"]:
-                            subject = child
-                            if child.pos_ == "PROPN":
-                                current_sentence_context = child.text.lower()
-                            break
-                    
-                    # Find object and handle special verb patterns
-                    for child in token.children:
-                        # Handle "work as", "serve as", etc.
-                        if child.text == "as" and child.dep_ == "prep":
-                            for as_child in child.children:
-                                if as_child.dep_ == "pobj":
-                                    obj = as_child
-                                    verb_phrase = f"{token.text} as"
-                                    break
-                        # Handle direct objects
-                        elif child.dep_ in ["dobj", "pobj"]:
-                            obj = child
-                        # Handle predicative complements
-                        elif child.dep_ == "acomp":
-                            obj = child
-                        # Handle possessive relationships
-                        elif child.dep_ == "poss" and current_sentence_context:
-                            relationships.append((
-                                child.text.lower(),
-                                "is sister of",
-                                current_sentence_context
-                            ))
-                    
-                    if subject and obj:
-                        # Resolve pronouns to their referent nouns
-                        subj_text = self._resolve_pronoun(subject)
-                        obj_text = self._get_span_text(obj).lower()
-                        
-                        # Add relationship if subject and object are different
-                        if subj_text != obj_text:
-                            relationships.append((
-                                subj_text,
-                                verb_phrase,
-                                obj_text
-                            ))
                 
-                # Handle copular verbs (is/am/are) separately
-                elif token.lemma_ in ["be", "am", "is", "are"]:
-                    subject = None
-                    obj = None
-                    
                     # Find subject
                     for child in token.children:
                         if child.dep_ in ["nsubj", "nsubjpass"]:
-                            subject = child
-                            if child.pos_ == "PROPN":
-                                current_sentence_context = child.text.lower()
+                            subject = self._resolve_pronoun(child).lower()
                             break
-                    
-                    # Find object or predicate nominal
+                
+                    # Find object
                     for child in token.children:
-                        if child.dep_ in ["attr", "acomp"]:
-                            obj = child
+                        if child.dep_ in ["dobj", "pobj", "attr", "acomp"]:
+                            obj = self._get_span_text(child).lower()
                             break
-                    
-                    if subject and obj:
-                        subj_text = self._resolve_pronoun(subject)
-                        obj_text = self._get_span_text(obj).lower()
-                        
-                        if subj_text != obj_text:
-                            relationships.append((
-                                subj_text,
-                                "is",
-                                obj_text
-                            ))
-        
+                
+                    if subject and obj and subject != obj:
+                        relationships.append((subject, verb_phrase, obj))
+    
         return relationships
     
     def _get_span_text(self, token: spacy.tokens.Token):
@@ -170,25 +106,24 @@ class KnowledgeGraphBuilder:
     
     def build_graph(self, text: str):
         """Build a knowledge graph from the input text."""
-        # Process text
         doc = self.preprocess_text(text)
-        
-        # Extract entities and relationships
         entities = self.extract_entities(doc)
         relationships = self.extract_relationships(doc)
-        
-        # Clear previous graph
+    
         self.graph.clear()
-        
-        # Add entities to graph
+        seen_nodes = set()
+        seen_edges = set()
+    
         for entity, entity_type in entities:
-            self.graph.add_node(entity, type=entity_type)
-        
-        # Add relationships to graph
+            if entity not in seen_nodes:
+                self.graph.add_node(entity, type=entity_type)
+                seen_nodes.add(entity)
+    
         for subj, pred, obj in relationships:
-            if subj != obj:  # Prevent self-loops
+            if (subj, obj) not in seen_edges:
                 self.graph.add_edge(subj, obj, relationship=pred)
-        
+                seen_edges.add((subj, obj))
+    
         return self.graph
     
     # [Rest of the methods remain the same: get_dependency_viz, get_graph_info, visualize_graph]
