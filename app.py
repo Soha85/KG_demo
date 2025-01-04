@@ -46,20 +46,24 @@ class KnowledgeGraphBuilder:
                     self.pronoun_map[token.i] = self.current_context
         st.write("Pronoun Map:")
         st.write(self.pronoun_map)
+
+    
     def __extract_mydata(self):
         st.write("Dependencies:")
         for token in self.doc:
           st.write(token.text, token.pos_, token.dep_)
         st.write("Noun Chunks:")
-        for token in doc.noun_chunks:
+        for token in self.doc.noun_chunks:
           st.write(token.text)
         st.write("Verbs or Relations:")
-        for token in doc:
+        for token in self.doc:
           if token.pos_ == 'VERB':
             st.write(token.text, token.lemma_)
         st.write("Entities:")
-        for ent in doc.ents:
+        for ent in self.doc.ents:
             st.write(ent.text, ent.label_)
+
+    
     def extract_entities(self, doc: spacy.tokens.Doc):
         """Extract entities and their types from the processed text."""
         entities = []
