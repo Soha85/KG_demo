@@ -49,17 +49,18 @@ class KnowledgeGraphBuilder:
 
     
     def __extract_mydata(self):
-        st.write("Dependencies:")
+        st.subheader("Spacy Extracted Information")
+        st.write("**Dependencies:**")
         for token in self.doc:
           st.write(token.text, token.pos_, token.dep_)
-        st.write("Noun Chunks:")
+        st.write("**Noun Chunks:**")
         for token in self.doc.noun_chunks:
           st.write(token.text)
-        st.write("Verbs or Relations:")
+        st.write("**Verbs or Relations:**")
         for token in self.doc:
           if token.pos_ == 'VERB':
             st.write(token.text, token.lemma_)
-        st.write("Entities:")
+        st.write("**Entities:**")
         for ent in self.doc.ents:
             st.write(ent.text, ent.label_)
 
