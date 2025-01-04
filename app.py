@@ -20,6 +20,7 @@ class KnowledgeGraphBuilder:
         """Preprocess the text and build pronoun mappings."""
         self.doc = self.nlp(text)
         self._build_pronoun_map()
+        self.__extract_mydata()
         return self.doc
     
     def _build_pronoun_map(self):
@@ -45,7 +46,7 @@ class KnowledgeGraphBuilder:
                     self.pronoun_map[token.i] = self.current_context
         st.write("Pronoun Map:")
         st.write(self.pronoun_map)
-    def extract_mydata(self):
+    def __extract_mydata(self):
         st.write("Dependencies:")
         for token in self.doc:
           st.write(token.text, token.pos_, token.dep_)
