@@ -43,6 +43,8 @@ class KnowledgeGraphBuilder:
                 # Map pronouns to the current context
                 if token.pos_ == "PRON" and self.current_context:
                     self.pronoun_map[token.i] = self.current_context
+            st.write("Pronoun Map:")
+            st.write(self.pronoun_map)
     
     def extract_entities(self, doc: spacy.tokens.Doc):
         """Extract entities and their types from the processed text."""
